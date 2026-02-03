@@ -1,10 +1,11 @@
 -- =====================================================
--- EXTREME FPS BOOSTER (BLACK SKY) + SMALL UI TOGGLE
+-- EXTREME FPS BOOSTER (BLACK SKY) + DRAGGABLE UI
 -- =====================================================
 
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
+local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 task.wait(2)
@@ -12,7 +13,7 @@ task.wait(2)
 local enabled = false
 
 -- =====================================================
--- SAVE ORIGINAL
+-- SAVE ORIGINAL SETTINGS
 -- =====================================================
 local original = {
     Brightness = Lighting.Brightness,
@@ -24,7 +25,7 @@ local original = {
 }
 
 -- =====================================================
--- FPS MODE
+-- FPS MODE FUNCTIONS
 -- =====================================================
 local function enableFPS()
     Lighting.GlobalShadows = false
@@ -82,16 +83,18 @@ local function disableFPS()
 end
 
 -- =====================================================
--- UI (SMALL + TOP RIGHT)
+-- UI SETUP
 -- =====================================================
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromScale(0.12, 0.07) -- kecil
-frame.Position = UDim2.fromScale(0.86, 0.03) -- kanan atas
+frame.Size = UDim2.fromScale(0.12, 0.07)
+frame.Position = UDim2.fromScale(0.8, 0.1)
 frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
 frame.BorderSizePixel = 0
+frame.Active = true
+frame.Selectable = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
 local button = Instance.new("TextButton", frame)
@@ -101,10 +104,11 @@ button.Text = "FPS : OFF"
 button.TextScaled = true
 button.BackgroundColor3 = Color3.fromRGB(120,60,60)
 button.TextColor3 = Color3.new(1,1,1)
+button.AutoButtonColor = true
 Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
 -- =====================================================
--- TOGGLE
+-- TOGGLE LOGIC
 -- =====================================================
 button.MouseButton1Click:Connect(function()
     enabled = not enabled
@@ -119,4 +123,40 @@ button.MouseButton1Click:Connect(function()
     end
 end)
 
-warn("Small FPS Toggle Loaded")
+-- =====================================================
+-- DRAGGABLE LOGIC
+-- =====================================================
+local dragging = false
+local dragStart, startPos
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+warn("FPS Booster Draggable UI Loaded")
