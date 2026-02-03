@@ -1,5 +1,5 @@
 -- =====================================================
--- EXTREME FPS BOOSTER (BLACK SKY) + UI TOGGLE
+-- EXTREME FPS BOOSTER (BLACK SKY) + SMALL UI TOGGLE
 -- =====================================================
 
 local Players = game:GetService("Players")
@@ -9,9 +9,6 @@ local player = Players.LocalPlayer
 
 task.wait(2)
 
--- =====================================================
--- STATE
--- =====================================================
 local enabled = false
 
 -- =====================================================
@@ -27,10 +24,9 @@ local original = {
 }
 
 -- =====================================================
--- FPS MODE FUNCTIONS
+-- FPS MODE
 -- =====================================================
 local function enableFPS()
-    -- Lighting
     Lighting.GlobalShadows = false
     Lighting.Brightness = 0
     Lighting.FogEnd = 9e9
@@ -47,12 +43,11 @@ local function enableFPS()
 
     local sky = Instance.new("Sky")
     sky.Name = "FPS_SKY"
-    for _, face in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"}) do
-        sky["Skybox"..face] = "rbxassetid://0"
+    for _, f in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"}) do
+        sky["Skybox"..f] = "rbxassetid://0"
     end
     sky.Parent = Lighting
 
-    -- Workspace
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("BasePart") then
             obj.Material = Enum.Material.Plastic
@@ -71,7 +66,6 @@ local function enableFPS()
     end
 
     Workspace.CurrentCamera.FieldOfView = 70
-    warn("FPS MODE ON")
 end
 
 local function disableFPS()
@@ -85,66 +79,44 @@ local function disableFPS()
     if sky then sky:Destroy() end
 
     Workspace.CurrentCamera.FieldOfView = original.FOV
-    warn("FPS MODE OFF (rejoin recommended)")
 end
 
 -- =====================================================
--- CHARACTER OPT
--- =====================================================
-local function optimizeChar(char)
-    if not enabled then return end
-    for _, v in pairs(char:GetDescendants()) do
-        if v:IsA("BasePart") then
-            v.Material = Enum.Material.Plastic
-            v.CastShadow = false
-        elseif v:IsA("Decal") or v:IsA("Texture") then
-            v:Destroy()
-        end
-    end
-end
-
-player.CharacterAdded:Connect(optimizeChar)
-
--- =====================================================
--- UI
+-- UI (SMALL + TOP RIGHT)
 -- =====================================================
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromScale(0.22, 0.15)
-frame.Position = UDim2.fromScale(0.02, 0.4)
+frame.Size = UDim2.fromScale(0.12, 0.07) -- kecil
+frame.Position = UDim2.fromScale(0.86, 0.03) -- kanan atas
 frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
 frame.BorderSizePixel = 0
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
 local button = Instance.new("TextButton", frame)
-button.Size = UDim2.fromScale(0.9, 0.6)
-button.Position = UDim2.fromScale(0.05, 0.2)
-button.Text = "FPS MODE : OFF"
+button.Size = UDim2.fromScale(0.92, 0.75)
+button.Position = UDim2.fromScale(0.04, 0.12)
+button.Text = "FPS : OFF"
 button.TextScaled = true
 button.BackgroundColor3 = Color3.fromRGB(120,60,60)
 button.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
 -- =====================================================
--- BUTTON LOGIC
+-- TOGGLE
 -- =====================================================
 button.MouseButton1Click:Connect(function()
     enabled = not enabled
-
     if enabled then
-        button.Text = "FPS MODE : ON"
+        button.Text = "FPS : ON"
         button.BackgroundColor3 = Color3.fromRGB(60,120,60)
         enableFPS()
-        if player.Character then
-            optimizeChar(player.Character)
-        end
     else
-        button.Text = "FPS MODE : OFF"
+        button.Text = "FPS : OFF"
         button.BackgroundColor3 = Color3.fromRGB(120,60,60)
         disableFPS()
     end
 end)
 
-warn("FPS UI Loaded")
+warn("Small FPS Toggle Loaded")
