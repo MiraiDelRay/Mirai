@@ -1,5 +1,5 @@
 -- =====================================================
--- SAFE FPS BOOST (NO OVER-OPTIMIZE) + DRAGGABLE UI
+-- SAFE FPS BOOST (SKILL SAFE) + DRAGGABLE UI
 -- =====================================================
 
 local Players = game:GetService("Players")
@@ -13,31 +13,31 @@ task.wait(2)
 local enabled = false
 
 -- =====================================================
--- SAVE ORIGINAL LIGHTING
+-- SAVE ORIGINAL SETTINGS
 -- =====================================================
 local original = {
     GlobalShadows = Lighting.GlobalShadows,
     Brightness = Lighting.Brightness,
     Ambient = Lighting.Ambient,
     OutdoorAmbient = Lighting.OutdoorAmbient,
-    FogEnd = Lighting.FogEnd,
     FogStart = Lighting.FogStart,
+    FogEnd = Lighting.FogEnd,
     FOV = Workspace.CurrentCamera.FieldOfView
 }
 
 -- =====================================================
--- APPLY SAFE FPS BOOST
+-- SAFE FPS BOOST
 -- =====================================================
 local function enableFPS()
     -- Lighting (GPU-side only)
     Lighting.GlobalShadows = false
-    Lighting.FogEnd = 1e9
     Lighting.FogStart = 0
+    Lighting.FogEnd = 1e9
     Lighting.Brightness = original.Brightness
     Lighting.Ambient = Color3.fromRGB(90,90,90)
     Lighting.OutdoorAmbient = Color3.fromRGB(90,90,90)
 
-    -- Remove heavy post effects only
+    -- Disable heavy post effects ONLY
     for _, v in ipairs(Lighting:GetChildren()) do
         if v:IsA("BlurEffect")
         or v:IsA("BloomEffect")
@@ -47,15 +47,37 @@ local function enableFPS()
         end
     end
 
-    -- Particles OFF (visual only)
+    -- Workspace optimization (SKILL SAFE)
     for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("ParticleEmitter")
-        or obj:IsA("Trail")
-        or obj:IsA("Beam") then
-            obj.Enabled = false
-        elseif obj:IsA("BasePart") then
+        if obj:IsA("BasePart") then
             obj.CastShadow = false
             obj.Reflectance = 0
+
+        elseif obj:IsA("ParticleEmitter")
+        or obj:IsA("Trail")
+        or obj:IsA("Beam") then
+
+            -- JANGAN matikan effect skill / character
+            if player.Character and obj:IsDescendantOf(player.Character) then
+                continue
+            end
+
+            -- JANGAN matikan effect dari Tool
+            local a = obj.Parent
+            local isTool = false
+            while a do
+                if a:IsA("Tool") then
+                    isTool = true
+                    break
+                end
+                a = a.Parent
+            end
+            if isTool then
+                continue
+            end
+
+            -- Map / ambient FX → OFF
+            obj.Enabled = false
         end
     end
 
@@ -70,8 +92,8 @@ local function disableFPS()
     Lighting.Brightness = original.Brightness
     Lighting.Ambient = original.Ambient
     Lighting.OutdoorAmbient = original.OutdoorAmbient
-    Lighting.FogEnd = original.FogEnd
     Lighting.FogStart = original.FogStart
+    Lighting.FogEnd = original.FogEnd
 
     for _, v in ipairs(Lighting:GetChildren()) do
         if v:IsA("PostEffect") then
@@ -98,7 +120,7 @@ gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.fromScale(0.12, 0.065)
-frame.Position = UDim2.fromScale(0.8, 0.1)
+frame.Position = UDim2.fromScale(0.8, 0.12)
 frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -126,8 +148,11 @@ btn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Drag
+-- =====================================================
+-- DRAG LOGIC
+-- =====================================================
 local dragging, dragStart, startPos
+
 frame.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1
     or i.UserInputType == Enum.UserInputType.Touch then
@@ -157,4 +182,4 @@ frame.InputEnded:Connect(function(i)
     end
 end)
 
-warn("SAFE FPS BOOST ACTIVE (No Over-Optimize)")
+warn("SAFE FPS BOOST LOADED — Skill animation visible")
