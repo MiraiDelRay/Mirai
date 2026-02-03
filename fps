@@ -1,0 +1,86 @@
+-- =====================================================
+-- EXTREME FPS BOOSTER (BLACK SKY)
+-- =====================================================
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+-- tunggu karakter spawn
+task.wait(2)
+
+-- =====================================================
+-- LIGHTING: MATI TOTAL
+-- =====================================================
+Lighting.GlobalShadows = false
+Lighting.Brightness = 0
+Lighting.FogEnd = 9e9
+Lighting.FogStart = 0
+Lighting.OutdoorAmbient = Color3.new(0,0,0)
+Lighting.Ambient = Color3.new(0,0,0)
+Lighting.ClockTime = 0
+
+-- hapus semua efek lighting
+for _, v in pairs(Lighting:GetChildren()) do
+    if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then
+        v:Destroy()
+    end
+end
+
+-- langit hitam pekat
+local sky = Instance.new("Sky")
+sky.SkyboxBk = "rbxassetid://0"
+sky.SkyboxDn = "rbxassetid://0"
+sky.SkyboxFt = "rbxassetid://0"
+sky.SkyboxLf = "rbxassetid://0"
+sky.SkyboxRt = "rbxassetid://0"
+sky.SkyboxUp = "rbxassetid://0"
+sky.Parent = Lighting
+
+-- =====================================================
+-- WORKSPACE: HANCURKAN VISUAL
+-- =====================================================
+for _, obj in pairs(Workspace:GetDescendants()) do
+    if obj:IsA("BasePart") then
+        obj.Material = Enum.Material.Plastic
+        obj.Reflectance = 0
+        obj.CastShadow = false
+    elseif obj:IsA("Texture") or obj:IsA("Decal") then
+        obj:Destroy()
+    elseif obj:IsA("ParticleEmitter")
+        or obj:IsA("Trail")
+        or obj:IsA("Beam")
+        or obj:IsA("Fire")
+        or obj:IsA("Smoke")
+        or obj:IsA("Sparkles") then
+        obj.Enabled = false
+    end
+end
+
+-- =====================================================
+-- CHARACTER: MINIMAL
+-- =====================================================
+local function optimizeChar(char)
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Material = Enum.Material.Plastic
+            v.CastShadow = false
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+        end
+    end
+end
+
+if player.Character then
+    optimizeChar(player.Character)
+end
+
+player.CharacterAdded:Connect(optimizeChar)
+
+-- =====================================================
+-- CAMERA
+-- =====================================================
+Workspace.CurrentCamera.FieldOfView = 70
+
+warn("EXTREME FPS MODE ACTIVE")
