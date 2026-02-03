@@ -1,0 +1,156 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+local skillLoopEnabled = false
+local tpLoopEnabled = false
+
+local EventFolder = ReplicatedStorage
+	:WaitForChild("\228\186\139\228\187\182")
+	:WaitForChild("\229\133\172\231\148\168")
+
+local SkillFolder = EventFolder:WaitForChild("\230\138\128\232\131\189")
+local BattleFolder = EventFolder:WaitForChild("\230\136\152\230\150\151")
+
+local EquipSkillRemote = SkillFolder
+	:WaitForChild("\232\163\133\229\164\135\230\138\128\232\131\189")
+
+local UseSkillRemote = SkillFolder
+	:WaitForChild("\228\189\191\231\148\168\230\138\128\232\131\189")
+
+local ResetSlotRemote = SkillFolder
+	:WaitForChild("\228\184\128\233\148\174\232\163\133\229\164\135")
+
+local DetectEnemyRemote = BattleFolder
+	:WaitForChild("\230\155\180\230\148\185\231\155\174\230\160\135")
+
+local SKILL_DELAY = 1.1
+
+local function skillLoop()
+	task.spawn(function()
+		local slot = 1
+		while skillLoopEnabled do
+			local char = player.Character or player.CharacterAdded:Wait()
+			local hrp = char:WaitForChild("HumanoidRootPart")
+
+			ResetSlotRemote:FireServer()
+			task.wait(SKILL_DELAY)
+
+			EquipSkillRemote:FireServer("9", slot)
+			task.wait(SKILL_DELAY)
+
+			task.wait(SKILL_DELAY)
+
+			UseSkillRemote:FireServer(slot, char, hrp.CFrame)
+			task.wait(SKILL_DELAY)
+
+			slot += 1
+			if slot > 3 then slot = 1 end
+		end
+	end)
+end
+
+local function tpEnemyLoop()
+	task.spawn(function()
+		local lockedPosition = nil
+		local locked = false
+
+		while tpLoopEnabled do
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+			if hrp then
+				if not locked then
+					local enemyFolder = workspace
+						:WaitForChild("\229\141\149\228\189\141\229\175\185\232\177\161")
+
+					local monsters = {}
+					local center = Vector3.zero
+
+					for _, enemy in pairs(enemyFolder:GetChildren()) do
+						local eHRP = enemy:FindFirstChild("HumanoidRootPart")
+						local hum = enemy:FindFirstChildOfClass("Humanoid")
+
+						if eHRP and hum and hum.Health > 0 then
+							table.insert(monsters, enemy)
+							center += eHRP.Position
+						end
+					end
+
+					if #monsters > 0 then
+						center /= #monsters
+						local pick, minDist = nil, math.huge
+
+						for _, enemy in pairs(monsters) do
+							local pos = enemy.HumanoidRootPart.Position
+							local d = (pos - center).Magnitude
+							if d < minDist then
+								minDist = d
+								pick = enemy
+							end
+						end
+
+						if pick then
+							lockedPosition = pick.HumanoidRootPart.Position
+							DetectEnemyRemote:FireServer(pick)
+							locked = true
+						end
+					end
+				end
+
+				if lockedPosition then
+					hrp.CFrame = CFrame.new(lockedPosition + Vector3.new(0, 0, -3))
+				end
+			end
+
+			task.wait(0.3)
+		end
+
+		locked = false
+		lockedPosition = nil
+	end)
+end
+
+local playerGui = player:WaitForChild("PlayerGui")
+if playerGui:FindFirstChild("AutoSkillUI") then
+	playerGui.AutoSkillUI:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "AutoSkillUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = playerGui
+
+local function createButton(text, yPos)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 240, 0, 44)
+	btn.Position = UDim2.new(0, 20, 0, yPos)
+	btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.BorderSizePixel = 0
+	btn.Text = text
+	btn.Active = true
+	btn.AutoButtonColor = true
+	btn.ZIndex = 9999
+	btn.Parent = gui
+	return btn
+end
+
+local skillBtn = createButton("Skill Loop : OFF", 120)
+local tpBtn = createButton("Auto TP (Lock Tengah) : OFF", 180)
+
+skillBtn.MouseButton1Click:Connect(function()
+	skillLoopEnabled = not skillLoopEnabled
+	skillBtn.Text = "Skill Loop : " .. (skillLoopEnabled and "ON" or "OFF")
+	if skillLoopEnabled then skillLoop() end
+end)
+
+tpBtn.MouseButton1Click:Connect(function()
+	tpLoopEnabled = not tpLoopEnabled
+	tpBtn.Text = "Auto TP (Lock Tengah) : " .. (tpLoopEnabled and "ON" or "OFF")
+	if tpLoopEnabled then tpEnemyLoop() end
+end)
