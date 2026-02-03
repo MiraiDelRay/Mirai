@@ -1,0 +1,104 @@
+-- =====================================================
+-- SERVICES
+-- =====================================================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+-- =====================================================
+-- REMOTE
+-- =====================================================
+local Remote = ReplicatedStorage
+    :WaitForChild("\228\186\139\228\187\182")
+    :WaitForChild("\229\133\172\231\148\168")
+    :WaitForChild("\229\133\179\229\141\161")
+    :WaitForChild("\232\191\155\229\133\165\228\184\150\231\149\140\229\133\179\229\141\161")
+
+-- =====================================================
+-- UI
+-- =====================================================
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromScale(0.32, 0.3)
+frame.Position = UDim2.fromScale(0.34, 0.35)
+frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+
+-- INPUT ANGKA
+local valueBox = Instance.new("TextBox", frame)
+valueBox.Size = UDim2.fromScale(0.9, 0.25)
+valueBox.Position = UDim2.fromScale(0.05, 0.1)
+valueBox.PlaceholderText = "Input angka"
+valueBox.TextScaled = true
+valueBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+valueBox.TextColor3 = Color3.new(1,1,1)
+valueBox.ClearTextOnFocus = false
+
+-- INPUT INTERVAL
+local intervalBox = Instance.new("TextBox", frame)
+intervalBox.Size = UDim2.fromScale(0.9, 0.25)
+intervalBox.Position = UDim2.fromScale(0.05, 0.4)
+intervalBox.PlaceholderText = "Interval (detik)"
+intervalBox.TextScaled = true
+intervalBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+intervalBox.TextColor3 = Color3.new(1,1,1)
+intervalBox.ClearTextOnFocus = false
+
+-- BUTTONS
+local startBtn = Instance.new("TextButton", frame)
+startBtn.Size = UDim2.fromScale(0.42, 0.2)
+startBtn.Position = UDim2.fromScale(0.05, 0.72)
+startBtn.Text = "START"
+startBtn.TextScaled = true
+startBtn.BackgroundColor3 = Color3.fromRGB(60,120,60)
+
+local stopBtn = Instance.new("TextButton", frame)
+stopBtn.Size = UDim2.fromScale(0.42, 0.2)
+stopBtn.Position = UDim2.fromScale(0.53, 0.72)
+stopBtn.Text = "STOP"
+stopBtn.TextScaled = true
+stopBtn.BackgroundColor3 = Color3.fromRGB(120,60,60)
+
+-- =====================================================
+-- LOGIC
+-- =====================================================
+local running = false
+local loopThread = nil
+
+local function startLoop()
+    local value = tonumber(valueBox.Text)
+    local interval = tonumber(intervalBox.Text)
+
+    if not value then
+        warn("Angka tidak valid")
+        return
+    end
+
+    if not interval or interval <= 0 then
+        warn("Interval tidak valid")
+        return
+    end
+
+    running = true
+
+    loopThread = task.spawn(function()
+        while running do
+            Remote:FireServer(value)
+            task.wait(interval)
+        end
+    end)
+end
+
+startBtn.MouseButton1Click:Connect(function()
+    if running then return end
+    startLoop()
+end)
+
+stopBtn.MouseButton1Click:Connect(function()
+    running = false
+end)
+
+warn("UI Angka + Interval Loaded")
