@@ -1,5 +1,5 @@
 -- =====================================================
--- SAFE FPS BOOST (SKILL SAFE) + DRAGGABLE UI
+-- SAFE FPS BOOST + BLACK SKY (SKILL VISIBLE)
 -- =====================================================
 
 local Players = game:GetService("Players")
@@ -13,7 +13,7 @@ task.wait(2)
 local enabled = false
 
 -- =====================================================
--- SAVE ORIGINAL SETTINGS
+-- SAVE ORIGINAL
 -- =====================================================
 local original = {
     GlobalShadows = Lighting.GlobalShadows,
@@ -26,26 +26,35 @@ local original = {
 }
 
 -- =====================================================
--- SAFE FPS BOOST
+-- APPLY SAFE FPS + BLACK SKY
 -- =====================================================
 local function enableFPS()
-    -- Lighting (GPU-side only)
+    -- Lighting safe
     Lighting.GlobalShadows = false
     Lighting.FogStart = 0
     Lighting.FogEnd = 1e9
     Lighting.Brightness = original.Brightness
-    Lighting.Ambient = Color3.fromRGB(90,90,90)
-    Lighting.OutdoorAmbient = Color3.fromRGB(90,90,90)
+    Lighting.Ambient = Color3.new(0,0,0)
+    Lighting.OutdoorAmbient = Color3.new(0,0,0)
 
-    -- Disable heavy post effects ONLY
+    -- HAPUS SKY & POST FX BERAT
     for _, v in ipairs(Lighting:GetChildren()) do
-        if v:IsA("BlurEffect")
+        if v:IsA("Sky")
+        or v:IsA("BlurEffect")
         or v:IsA("BloomEffect")
         or v:IsA("SunRaysEffect")
         or v:IsA("ColorCorrectionEffect") then
-            v.Enabled = false
+            v:Destroy()
         end
     end
+
+    -- LANGIT HITAM TOTAL
+    local sky = Instance.new("Sky")
+    sky.Name = "BLACK_SKY"
+    for _, f in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"}) do
+        sky["Skybox"..f] = "rbxassetid://0"
+    end
+    sky.Parent = Lighting
 
     -- Workspace optimization (SKILL SAFE)
     for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -57,27 +66,22 @@ local function enableFPS()
         or obj:IsA("Trail")
         or obj:IsA("Beam") then
 
-            -- JANGAN matikan effect skill / character
+            -- JANGAN matikan skill / character
             if player.Character and obj:IsDescendantOf(player.Character) then
                 continue
             end
 
             -- JANGAN matikan effect dari Tool
             local a = obj.Parent
-            local isTool = false
             while a do
                 if a:IsA("Tool") then
-                    isTool = true
-                    break
+                    goto skip
                 end
                 a = a.Parent
             end
-            if isTool then
-                continue
-            end
 
-            -- Map / ambient FX → OFF
             obj.Enabled = false
+            ::skip::
         end
     end
 
@@ -85,7 +89,7 @@ local function enableFPS()
 end
 
 -- =====================================================
--- RESTORE
+-- DISABLE
 -- =====================================================
 local function disableFPS()
     Lighting.GlobalShadows = original.GlobalShadows
@@ -94,6 +98,9 @@ local function disableFPS()
     Lighting.OutdoorAmbient = original.OutdoorAmbient
     Lighting.FogStart = original.FogStart
     Lighting.FogEnd = original.FogEnd
+
+    local sky = Lighting:FindFirstChild("BLACK_SKY")
+    if sky then sky:Destroy() end
 
     for _, v in ipairs(Lighting:GetChildren()) do
         if v:IsA("PostEffect") then
@@ -121,7 +128,7 @@ gui.ResetOnSpawn = false
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.fromScale(0.12, 0.065)
 frame.Position = UDim2.fromScale(0.8, 0.12)
-frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
+frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
 frame.BorderSizePixel = 0
 frame.Active = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
@@ -148,11 +155,8 @@ btn.MouseButton1Click:Connect(function()
     end
 end)
 
--- =====================================================
--- DRAG LOGIC
--- =====================================================
+-- DRAG
 local dragging, dragStart, startPos
-
 frame.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1
     or i.UserInputType == Enum.UserInputType.Touch then
@@ -165,12 +169,12 @@ end)
 UIS.InputChanged:Connect(function(i)
     if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
     or i.UserInputType == Enum.UserInputType.Touch) then
-        local delta = i.Position - dragStart
+        local d = i.Position - dragStart
         frame.Position = UDim2.new(
             startPos.X.Scale,
-            startPos.X.Offset + delta.X,
+            startPos.X.Offset + d.X,
             startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
+            startPos.Y.Offset + d.Y
         )
     end
 end)
@@ -182,4 +186,4 @@ frame.InputEnded:Connect(function(i)
     end
 end)
 
-warn("SAFE FPS BOOST LOADED — Skill animation visible")
+warn("SAFE FPS BOOST + BLACK SKY ACTIVE (skill visible)")
