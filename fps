@@ -1,5 +1,5 @@
 -- =====================================================
--- SAFE FPS BOOST + BLACK SKY (SKILL VISIBLE)
+-- EXTREME FPS BOOSTER (BLACK SKY) + DRAGGABLE UI
 -- =====================================================
 
 local Players = game:GetService("Players")
@@ -13,177 +13,150 @@ task.wait(2)
 local enabled = false
 
 -- =====================================================
--- SAVE ORIGINAL
+-- SAVE ORIGINAL SETTINGS
 -- =====================================================
 local original = {
-    GlobalShadows = Lighting.GlobalShadows,
     Brightness = Lighting.Brightness,
+    GlobalShadows = Lighting.GlobalShadows,
     Ambient = Lighting.Ambient,
     OutdoorAmbient = Lighting.OutdoorAmbient,
-    FogStart = Lighting.FogStart,
-    FogEnd = Lighting.FogEnd,
+    ClockTime = Lighting.ClockTime,
     FOV = Workspace.CurrentCamera.FieldOfView
 }
 
 -- =====================================================
--- APPLY SAFE FPS + BLACK SKY
+-- FPS MODE FUNCTIONS
 -- =====================================================
 local function enableFPS()
-    -- Lighting safe
     Lighting.GlobalShadows = false
+    Lighting.Brightness = 0
+    Lighting.FogEnd = 9e9
     Lighting.FogStart = 0
-    Lighting.FogEnd = 1e9
-    Lighting.Brightness = original.Brightness
     Lighting.Ambient = Color3.new(0,0,0)
     Lighting.OutdoorAmbient = Color3.new(0,0,0)
+    Lighting.ClockTime = 0
 
-    -- HAPUS SKY & POST FX BERAT
-    for _, v in ipairs(Lighting:GetChildren()) do
-        if v:IsA("Sky")
-        or v:IsA("BlurEffect")
-        or v:IsA("BloomEffect")
-        or v:IsA("SunRaysEffect")
-        or v:IsA("ColorCorrectionEffect") then
+    for _, v in pairs(Lighting:GetChildren()) do
+        if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then
             v:Destroy()
         end
     end
 
-    -- LANGIT HITAM TOTAL
     local sky = Instance.new("Sky")
-    sky.Name = "BLACK_SKY"
+    sky.Name = "FPS_SKY"
     for _, f in ipairs({"Bk","Dn","Ft","Lf","Rt","Up"}) do
         sky["Skybox"..f] = "rbxassetid://0"
     end
     sky.Parent = Lighting
 
-    -- Workspace optimization (SKILL SAFE)
-    for _, obj in ipairs(Workspace:GetDescendants()) do
+    for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.Plastic
             obj.CastShadow = false
             obj.Reflectance = 0
-
+        elseif obj:IsA("Texture") or obj:IsA("Decal") then
+            obj:Destroy()
         elseif obj:IsA("ParticleEmitter")
-        or obj:IsA("Trail")
-        or obj:IsA("Beam") then
-
-            -- JANGAN matikan skill / character
-            if player.Character and obj:IsDescendantOf(player.Character) then
-                continue
-            end
-
-            -- JANGAN matikan effect dari Tool
-            local a = obj.Parent
-            while a do
-                if a:IsA("Tool") then
-                    goto skip
-                end
-                a = a.Parent
-            end
-
+            or obj:IsA("Trail")
+            or obj:IsA("Beam")
+            or obj:IsA("Fire")
+            or obj:IsA("Smoke")
+            or obj:IsA("Sparkles") then
             obj.Enabled = false
-            ::skip::
         end
     end
 
-    Workspace.CurrentCamera.FieldOfView = original.FOV
+    Workspace.CurrentCamera.FieldOfView = 70
 end
 
--- =====================================================
--- DISABLE
--- =====================================================
 local function disableFPS()
-    Lighting.GlobalShadows = original.GlobalShadows
     Lighting.Brightness = original.Brightness
+    Lighting.GlobalShadows = original.GlobalShadows
     Lighting.Ambient = original.Ambient
     Lighting.OutdoorAmbient = original.OutdoorAmbient
-    Lighting.FogStart = original.FogStart
-    Lighting.FogEnd = original.FogEnd
+    Lighting.ClockTime = original.ClockTime
 
-    local sky = Lighting:FindFirstChild("BLACK_SKY")
+    local sky = Lighting:FindFirstChild("FPS_SKY")
     if sky then sky:Destroy() end
-
-    for _, v in ipairs(Lighting:GetChildren()) do
-        if v:IsA("PostEffect") then
-            v.Enabled = true
-        end
-    end
-
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("ParticleEmitter")
-        or obj:IsA("Trail")
-        or obj:IsA("Beam") then
-            obj.Enabled = true
-        end
-    end
 
     Workspace.CurrentCamera.FieldOfView = original.FOV
 end
 
 -- =====================================================
--- UI (DRAGGABLE)
+-- UI SETUP
 -- =====================================================
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromScale(0.12, 0.065)
-frame.Position = UDim2.fromScale(0.8, 0.12)
+frame.Size = UDim2.fromScale(0.12, 0.07)
+frame.Position = UDim2.fromScale(0.8, 0.1)
 frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
 frame.BorderSizePixel = 0
 frame.Active = true
+frame.Selectable = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
-local btn = Instance.new("TextButton", frame)
-btn.Size = UDim2.fromScale(0.92, 0.75)
-btn.Position = UDim2.fromScale(0.04, 0.12)
-btn.Text = "FPS : OFF"
-btn.TextScaled = true
-btn.BackgroundColor3 = Color3.fromRGB(120,60,60)
-btn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.fromScale(0.92, 0.75)
+button.Position = UDim2.fromScale(0.04, 0.12)
+button.Text = "FPS : OFF"
+button.TextScaled = true
+button.BackgroundColor3 = Color3.fromRGB(120,60,60)
+button.TextColor3 = Color3.new(1,1,1)
+button.AutoButtonColor = true
+Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
-btn.MouseButton1Click:Connect(function()
+-- =====================================================
+-- TOGGLE LOGIC
+-- =====================================================
+button.MouseButton1Click:Connect(function()
     enabled = not enabled
     if enabled then
-        btn.Text = "FPS : ON"
-        btn.BackgroundColor3 = Color3.fromRGB(60,120,60)
+        button.Text = "FPS : ON"
+        button.BackgroundColor3 = Color3.fromRGB(60,120,60)
         enableFPS()
     else
-        btn.Text = "FPS : OFF"
-        btn.BackgroundColor3 = Color3.fromRGB(120,60,60)
+        button.Text = "FPS : OFF"
+        button.BackgroundColor3 = Color3.fromRGB(120,60,60)
         disableFPS()
     end
 end)
 
--- DRAG
-local dragging, dragStart, startPos
-frame.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1
-    or i.UserInputType == Enum.UserInputType.Touch then
+-- =====================================================
+-- DRAGGABLE LOGIC
+-- =====================================================
+local dragging = false
+local dragStart, startPos
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
-        dragStart = i.Position
+        dragStart = input.Position
         startPos = frame.Position
     end
 end)
 
-UIS.InputChanged:Connect(function(i)
-    if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
-    or i.UserInputType == Enum.UserInputType.Touch) then
-        local d = i.Position - dragStart
-        frame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + d.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + d.Y
-        )
-    end
-end)
-
-frame.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1
-    or i.UserInputType == Enum.UserInputType.Touch then
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
 end)
 
-warn("SAFE FPS BOOST + BLACK SKY ACTIVE (skill visible)")
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+warn("FPS Booster Draggable UI Loaded")
