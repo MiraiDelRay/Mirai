@@ -26,6 +26,8 @@ local DetectEnemyRemote = BattleFolder
 
 local SKILL_DELAY = 1.1
 
+-- ================= SKILL LOOP =================
+
 local function skillLoop()
 	task.spawn(function()
 		local slot = 1
@@ -39,8 +41,6 @@ local function skillLoop()
 			EquipSkillRemote:FireServer("9", slot)
 			task.wait(SKILL_DELAY)
 
-			task.wait(SKILL_DELAY)
-
 			UseSkillRemote:FireServer(slot, char, hrp.CFrame)
 			task.wait(SKILL_DELAY)
 
@@ -49,6 +49,8 @@ local function skillLoop()
 		end
 	end)
 end
+
+-- ================= TP LOOP =================
 
 local function tpEnemyLoop()
 	task.spawn(function()
@@ -111,6 +113,8 @@ local function tpEnemyLoop()
 	end)
 end
 
+-- ================= UI =================
+
 local playerGui = player:WaitForChild("PlayerGui")
 if playerGui:FindFirstChild("AutoSkillUI") then
 	playerGui.AutoSkillUI:Destroy()
@@ -123,34 +127,75 @@ gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = playerGui
 
+-- MAIN PANEL
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 190)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -95)
+mainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = mainFrame
+
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundTransparency = 1
+title.Text = "AUTO SKILL PANEL"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.Parent = mainFrame
+
+-- BUTTON CREATOR
 local function createButton(text, yPos)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 240, 0, 44)
-	btn.Position = UDim2.new(0, 20, 0, yPos)
-	btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	btn.Size = UDim2.new(0.9, 0, 0, 45)
+	btn.Position = UDim2.new(0.05, 0, 0, yPos)
+	btn.BackgroundColor3 = Color3.fromRGB(120, 30, 30) -- OFF merah
 	btn.TextColor3 = Color3.new(1, 1, 1)
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 14
 	btn.BorderSizePixel = 0
 	btn.Text = text
-	btn.Active = true
-	btn.AutoButtonColor = true
-	btn.ZIndex = 9999
-	btn.Parent = gui
+	btn.Parent = mainFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 10)
+	btnCorner.Parent = btn
+
 	return btn
 end
 
-local skillBtn = createButton("Skill Loop : OFF", 120)
-local tpBtn = createButton("Auto TP (Lock Tengah) : OFF", 180)
+local skillBtn = createButton("Skill Loop : OFF", 60)
+local tpBtn = createButton("Auto TP (Lock Tengah) : OFF", 120)
+
+-- BUTTON LOGIC
 
 skillBtn.MouseButton1Click:Connect(function()
 	skillLoopEnabled = not skillLoopEnabled
 	skillBtn.Text = "Skill Loop : " .. (skillLoopEnabled and "ON" or "OFF")
-	if skillLoopEnabled then skillLoop() end
+	skillBtn.BackgroundColor3 = skillLoopEnabled 
+		and Color3.fromRGB(30, 120, 40) 
+		or Color3.fromRGB(120, 30, 30)
+
+	if skillLoopEnabled then
+		skillLoop()
+	end
 end)
 
 tpBtn.MouseButton1Click:Connect(function()
 	tpLoopEnabled = not tpLoopEnabled
 	tpBtn.Text = "Auto TP (Lock Tengah) : " .. (tpLoopEnabled and "ON" or "OFF")
-	if tpLoopEnabled then tpEnemyLoop() end
+	tpBtn.BackgroundColor3 = tpLoopEnabled 
+		and Color3.fromRGB(30, 120, 40) 
+		or Color3.fromRGB(120, 30, 30)
+
+	if tpLoopEnabled then
+		tpEnemyLoop()
+	end
 end)
